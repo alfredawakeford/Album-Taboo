@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Album Taboo Game</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+
+<h1>Album Taboo</h1>
+
+<button onclick="generateCard('easy')">Easy</button>
+<button onclick="generateCard('medium')">Medium</button>
+<button onclick="generateCard('hard')">Hard</button>
+
+<div class="card" id="card">
+  <div class="card-content">
+
+    <div class="left-side">
+      <div class="header">
+        <h2 id="album"></h2>
+        <h3 id="artist"></h3>
+      </div>
+      <img id="cover">
+    </div>
+
+    <div class="right-side">
+      <h4>Taboo Words</h4>
+      <ul id="taboo"></ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+let decks = {
+  easy: [],
+  medium: [],
+  hard: []
+};
+
+Papa.parse("albums.csv", {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+
+    results.data.forEach(row => {
+
+      const album = {
+        album: row["Album name"]?.trim(),
+        artist: row["Artist"]?.trim(),
+        taboo: row["Taboo Words"]?.replace(/"/g, '').trim(),
+        url: row["URL"]?.trim()
+      };
+
+      const difficulty = row["Easy/Medium/Hard"]?.trim().toLowerCase();
+
+      if (decks[difficulty]) {
+        decks[difficulty].push(album);
+      }
+    });
+  }
+});
+
+function generateCard(level) {
+
+  if (decks[level].length === 0) {
+    alert("No more cards left for this difficulty!");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * decks[level].length);
+  const cardData = decks[level][randomIndex];
+
+  decks[level].splice(randomIndex, 1);
+
+  document.getElementById("album").innerText = cardData.album;
+  document.getElementById("artist").innerText = cardData.artist;
+  document.getElementById("cover").src = cardData.url;
+
+  const tabooList = document.getElementById("taboo");
+  tabooList.innerHTML = "";
+
+  cardData.taboo.split(",").forEach(word => {
+    const li = document.createElement("li");
+    li.innerText = word.trim();
+    tabooList.appendChild(li);
+  });
+
+  document.getElementById("card").style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
